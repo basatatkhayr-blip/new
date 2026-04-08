@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مهامي - نظام إدارة المشاريع</title>
+  <link rel="icon" type="image/png" href="assets/images/1.png">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="assets/images/1.png" alt="Logo" class="logo-main" onerror="this.src='https://via.placeholder.com/80?text=Logo'">
+        <div style="text-align: center; font-weight: 700; font-size: 18px;">نظام إدارة المشاريع</div>
+        <img src="assets/images/2.png" alt="Team Logo" class="logo-team" onerror="this.src='https://via.placeholder.com/40?text=Team'">
+      </div>
+      <nav class="sidebar-nav">
+        <li><a href="dashboard.html"><i class="fas fa-chart-line"></i> <span>لوحة التحكم</span></a></li>
+        <li><a href="projects.html"><i class="fas fa-folder"></i> <span>المشاريع</span></a></li>
+        <li><a href="my-tasks.html" class="active"><i class="fas fa-tasks"></i> <span>مهامي</span></a></li>
+        <li><a href="calendar.html"><i class="fas fa-calendar-alt"></i> <span>التقويم</span></a></li>
+        <li id="analyticsLink" style="display: none;"><a href="team-analytics.html"><i class="fas fa-microscope"></i> <span>تحليلات الفريق</span></a></li>
+      </nav>
+    </aside>
+
+    <div class="main-content">
+      <nav class="navbar animate-fade">
+        <div class="navbar-brand">
+          <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+          <span>قائمة مهامي الخاصة</span>
+        </div>
+        <div class="navbar-right">
+          <div class="user-info">
+            <div class="user-avatar" id="userAvatar">ع</div>
+            <div class="user-details">
+              <div id="userName" style="font-weight: 700;">المستخدم</div>
+              <div id="userRole" style="font-size: 12px; color: var(--text-muted);">مستخدم</div>
+            </div>
+          </div>
+         <!-- <button class="btn btn-danger btn-sm" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>خروج</span></button> -->
+        </div>
+      </nav>
+
+      <div class="content">
+        <div id="tasksGrid" class="grid grid-3 animate-fade">
+          <div style="grid-column: 1/-1; text-align: center; padding: 50px;">جاري تحميل مهامك...</div>
+        </div>
+      </div>
+
+      <footer class="footer">
+        جميع الحقوق محفوظة &copy; <span class="footer-name">Mohamed Sayed Zaky</span> - 2026
+      </footer>
+    </div>
+  </div>
+
+  <!-- نافذة تحديث المهمة -->
+  <div class="modal-overlay" id="updateTaskModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTaskTitle">تحديث المهمة</h3>
+        <button class="btn btn-danger btn-sm" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>حالة المهمة</label>
+          <select id="taskStatus" class="form-control">
+            <option value="todo">قيد الانتظار</option>
+            <option value="in_progress">قيد التنفيذ</option>
+            <option value="done">مكتملة</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>نسبة الإنجاز (<span id="progressVal">0</span>%)</label>
+          <input type="range" id="taskProgress" class="form-control" min="0" max="100" step="5" oninput="document.getElementById('progressVal').textContent = this.value">
+        </div>
+        <div class="form-group">
+          <label>إضافة تعليق</label>
+          <textarea id="taskComment" class="form-control" rows="2" placeholder="اكتب ملاحظاتك هنا..."></textarea>
+        </div>
+        <div id="commentsList" style="margin-top: 20px; max-height: 150px; overflow-y: auto; border-top: 1px solid var(--border); padding-top: 10px;">
+          <!-- التعليقات تظهر هنا -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" onclick="closeModal()">إلغاء</button>
+        <button class="btn btn-primary" id="saveUpdateBtn">حفظ التغييرات</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="scripts/supabase-client.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!window.userManager.isLoggedIn()) window.location.href = 'login.html';
+      const currentUser = window.userManager.getCurrentUser();
+      let currentTaskId = null;
+
+      document.getElementById('userName').textContent = currentUser.full_name;
+      document.getElementById('userRole').textContent = window.userManager.getRoleLabel(currentUser.role);
+      document.getElementById('userAvatar').textContent = currentUser.full_name.charAt(0);
+      
+      if (window.userManager.isManager()) document.getElementById('analyticsLink').style.display = 'block';
+
+      // Mobile Menu Toggle
+      const menuToggle = document.getElementById('menuToggle');
+      const sidebar = document.getElementById('sidebar');
+      menuToggle.onclick = () => sidebar.classList.toggle('active');
+
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    if (logoutBtn) {
+      logoutBtn.onclick = () => {
+        if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+          userManager.logout();
+          window.location.href = 'login.html';
+        }
+      };
+    }
+
+      // وظيفة لتحديد لون الحالة
+      function getStatusBadgeClass(status) {
+        const statusClasses = {
+          'todo': 'badge-info',
+          'in_progress': 'badge-warning',
+          'done': 'badge-success',
+          'delayed': 'badge-danger'
+        };
+        return statusClasses[status] || 'badge-info';
+      }
+
+      async function loadMyTasks() {
+        try {
+          const tasks = await window.taskManager.getMyTasks(currentUser.id);
+          const grid = document.getElementById('tasksGrid');
+          
+          if (tasks.length === 0) {
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 50px;">لا توجد مهام مسندة إليك حالياً</div>';
+            return;
+          }
+
+          grid.innerHTML = tasks.map(t => {
+            const statusClass = getStatusBadgeClass(t.status);
+            const statusLabel = window.getStatusLabel(t.status);
+            const isOverdue = t.due_date && new Date(t.due_date) < new Date() && t.status !== 'done';
+
+            return `
+              <div class="card animate-slide">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                  <span class="badge ${statusClass}">${statusLabel}</span>
+                  <span class="badge ${t.priority === 'high' ? 'badge-danger' : 'badge-info'}">${window.getPriorityLabel(t.priority)}</span>
+                </div>
+                <h3 style="margin-bottom: 5px;">${t.title}</h3>
+                <div style="font-size: 12px; color: var(--primary); font-weight: 700; margin-bottom: 10px;">📁 ${t.projects?.name || 'مشروع'}</div>
+                
+                <div style="margin-bottom: 15px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px;">
+                    <span>التقدم</span>
+                    <span>${t.progress}%</span>
+                  </div>
+                  <div style="height: 8px; background: #eee; border-radius: 10px; overflow: hidden;">
+                    <div style="width: ${t.progress}%; height: 100%; background: var(--primary); transition: width 0.5s ease;"></div>
+                  </div>
+                </div>
+
+                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">
+                  📅 الاستحقاق: <strong style="color: ${isOverdue ? 'var(--danger)' : 'inherit'}">${window.formatDate(t.due_date)}</strong>
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="openUpdateModal(${t.id}, '${t.title}', '${t.status}', ${t.progress})">تحديث الحالة <i class="fas fa-cog" style="margin-right: 8px;"></i></button>
+              </div>
+            `;
+          }).join('');
+        } catch (error) {
+          console.error('Error loading tasks:', error);
+        }
+      }
+
+      const modal = document.getElementById('updateTaskModal');
+      window.closeModal = () => modal.style.display = 'none';
+
+      window.openUpdateModal = async (id, title, status, progress) => {
+        currentTaskId = id;
+        document.getElementById('modalTaskTitle').textContent = title;
+        document.getElementById('taskStatus').value = status;
+        document.getElementById('taskProgress').value = progress;
+        document.getElementById('progressVal').textContent = progress;
+        document.getElementById('taskComment').value = '';
+        
+        modal.style.display = 'flex';
+        
+        // تحميل التعليقات
+        const comments = await window.commentManager.getComments(id);
+        const list = document.getElementById('commentsList');
+        list.innerHTML = comments.map(c => `
+          <div style="font-size: 12px; margin-bottom: 8px; padding: 5px; background: #f8f9fa; border-radius: 5px;">
+            <strong>${c.users?.full_name}:</strong> ${c.content}
+            <div style="font-size: 10px; color: var(--text-muted);">${new Date(c.created_at).toLocaleString('ar-EG')}</div>
+          </div>
+        `).join('') || '<div style="font-size: 12px; color: var(--text-muted);">لا توجد تعليقات</div>';
+      };
+
+      document.getElementById('saveUpdateBtn').onclick = async () => {
+        const status = document.getElementById('taskStatus').value;
+        const progress = document.getElementById('taskProgress').value;
+        const comment = document.getElementById('taskComment').value;
+
+        try {
+          await window.taskManager.updateTask(currentTaskId, { status, progress }, currentUser.id);
+          if (comment.trim()) {
+            await window.commentManager.addComment(currentTaskId, currentUser.id, comment);
+          }
+          window.closeModal();
+          loadMyTasks();
+        } catch (e) { alert('حدث خطأ أثناء التحديث'); }
+      };
+
+      loadMyTasks();
+    });
+  </script>
+</body>
+</html>

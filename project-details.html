@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تفاصيل المشروع</title>
+  <link rel="icon" type="image/png" href="assets/images/1.png">
+
+  <!-- 👇 ضيف ده -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="assets/images/1.png" alt="Logo" class="logo-main" onerror="this.src='https://via.placeholder.com/80?text=Logo'">
+        <div style="text-align: center; font-weight: 700; font-size: 18px;">نظام إدارة المشاريع</div>
+        <img src="assets/images/2.png" alt="Team Logo" class="logo-team" onerror="this.src='https://via.placeholder.com/40?text=Team'">
+      </div>
+      <nav class="sidebar-nav">
+        <li><a href="dashboard.html">📈 <span>لوحة التحكم</span></a></li>
+        <li><a href="projects.html" class="active">📁 <span>المشاريع</span></a></li>
+        <li><a href="my-tasks.html">👉 <span>مهامي</span></a></li>
+        <li><a href="calendar.html">📅 <span>التقويم</span></a></li>
+        <li id="analyticsLink" style="display: none;"><a href="team-analytics.html">🔬 <span>تحليلات الفريق</span></a></li>
+      </nav>
+    </aside>
+
+    <div class="main-content">
+      <nav class="navbar animate-fade">
+        <div class="navbar-brand">
+          <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <span id="projectTitle">تفاصيل المشروع</span>
+        </div>
+        <div class="navbar-right">
+          <button class="btn btn-primary" id="addTaskBtn" style="display: none;">➕ مهمة جديدة</button>
+          <button class="btn btn-danger" id="deleteProjectBtn" style="display: none;">🗑️ حذف المشروع</button>
+          <div class="user-info">
+            <div class="user-avatar" id="userAvatar">ع</div>
+            <div>
+              <div id="userName" style="font-weight: 700;">المستخدم</div>
+              <div id="userRole" style="font-size: 12px; color: var(--text-muted);">مستخدم</div>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div class="content">
+        <div class="card animate-slide" style="margin-bottom: 30px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 id="pName" style="color: var(--primary);">اسم المشروع</h2>
+            <span id="pPriority" class="badge">أولوية</span>
+          </div>
+          <p id="pDesc" style="color: var(--text-muted); margin-bottom: 20px;">وصف المشروع...</p>
+          <div class="grid grid-3">
+            <div>📅 البداية: <strong id="pStart">-</strong></div>
+            <div>📅 النهاية: <strong id="pEnd">-</strong></div>
+            <div>⏳ المتبقي: <strong id="pRemaining">-</strong> يوم</div>
+          </div>
+        </div>
+
+        <h3 style="margin-bottom: 20px;">قائمة المهام</h3>
+        <div class="card table-container animate-fade">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>المهمة</th>
+                <th>المسند إليه</th>
+                <th>الحالة</th>
+                <th>الأولوية</th>
+                <th>تاريخ الاستحقاق</th>
+                <th>التقدم</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="tasksBody">
+              <tr><td colspan="7" style="text-align: center; padding: 30px;">جاري تحميل المهام...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <footer class="footer">
+        جميع الحقوق محفوظة &copy; <span class="footer-name">Mohamed Sayed Zaky</span> - 2026
+      </footer>
+    </div>
+  </div>
+
+  <!-- نافذة إضافة مهمة -->
+  <div class="modal-overlay" id="taskModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>إضافة مهمة جديدة</h3>
+        <button class="btn btn-secondary btn-sm" onclick="closeTaskModal()">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>عنوان المهمة</label>
+          <input type="text" id="taskTitle" class="form-control" placeholder="مثلاً: تصميم واجهة المستخدم">
+        </div>
+        <div class="form-group">
+          <label>الوصف</label>
+          <textarea id="taskDesc" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label>إسناد إلى</label>
+            <select id="taskAssignee" class="form-control"></select>
+          </div>
+          <div class="form-group">
+            <label>الأولوية</label>
+            <select id="taskPriority" class="form-control">
+              <option value="low">منخفضة</option>
+              <option value="medium" selected>متوسطة</option>
+              <option value="high">عالية</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label>تاريخ البداية</label>
+            <input type="date" id="taskStart" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>تاريخ الاستحقاق</label>
+            <input type="date" id="taskDue" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+            <input type="checkbox" id="taskIsExtra" style="width: 18px; height: 18px;"> مهمة إضافية (خارج الخطة)
+          </label>
+        </div>
+        <div class="form-group">
+          <label>الوسوم (Tags)</label>
+          <input type="text" id="taskTags" class="form-control" placeholder="مثلاً: تصميم، برمجة، عاجل">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeTaskModal()">إلغاء</button>
+        <button class="btn btn-primary" id="saveTaskBtn">إنشاء المهمة</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="scripts/supabase-client.js"></script>
+  <script>
+    if (!userManager.isLoggedIn()) window.location.href = 'login.html';
+    const currentUser = userManager.getCurrentUser();
+    // 👇 ضيف الكود ده هنا
+const menuToggle = document.getElementById('menuToggle');
+const sidebar = document.getElementById('sidebar');
+menuToggle.onclick = () => sidebar.classList.toggle('active');
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('id');
+
+    if (!projectId) window.location.href = 'projects.html';
+
+    document.getElementById('userName').textContent = currentUser.full_name;
+    document.getElementById('userRole').textContent = userManager.getRoleLabel(currentUser.role);
+    document.getElementById('userAvatar').textContent = currentUser.full_name.charAt(0);
+    
+    if (userManager.isManager()) {
+      document.getElementById('addTaskBtn').style.display = 'flex';
+      document.getElementById('deleteProjectBtn').style.display = 'flex';
+      document.getElementById('analyticsLink').style.display = 'block';
+    }
+
+    async function loadProjectDetails() {
+      const p = await projectManager.getProjectById(projectId);
+      if (!p) return;
+
+      document.getElementById('pName').textContent = p.name;
+      document.getElementById('pDesc').textContent = p.description || 'لا يوجد وصف';
+      document.getElementById('pStart').textContent = formatDate(p.start_date);
+      document.getElementById('pEnd').textContent = formatDate(p.end_date);
+      document.getElementById('pRemaining').textContent = calculateRemainingDays(p.end_date);
+      
+      const pBadge = document.getElementById('pPriority');
+      pBadge.textContent = getPriorityLabel(p.priority);
+      pBadge.className = `badge ${p.priority === 'high' ? 'badge-danger' : p.priority === 'medium' ? 'badge-warning' : 'badge-info'}`;
+
+      loadTasks();
+    }
+
+    async function loadTasks() {
+      const tasks = await taskManager.getTasks(projectId, currentUser);
+      const tbody = document.getElementById('tasksBody');
+      
+      if (tasks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px;">لا توجد مهام حالياً</td></tr>';
+        return;
+      }
+
+      const users = await getAllUsers();
+
+      tbody.innerHTML = tasks.map(t => {
+        const assignee = users.find(u => u.id == t.assigned_to)?.full_name || 'غير محدد';
+        const statusLabel = getStatusLabel(t.status);
+        const statusClass = window.getStatusBadgeClass(t.status);
+        const priorityLabel = getPriorityLabel(t.priority);
+        const isOverdue = t.due_date && new Date(t.due_date) < new Date() && t.status !== 'done';
+
+        return `
+          <tr class="animate-fade">
+            <td>
+              <strong>${t.title}</strong>
+              ${t.is_extra ? '<span class="badge" style="background: #ede9fe; color: #6b21a8; font-size: 10px; margin-right: 5px;">إضافية</span>' : ''}
+              <div style="font-size: 11px; color: var(--text-muted);">${t.tags || ''}</div>
+            </td>
+            <td>${assignee}</td>
+            <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+            <td>${priorityLabel}</td>
+            <td style="color: ${isOverdue ? 'var(--danger)' : 'inherit'}; font-weight: ${isOverdue ? '700' : '400'};">
+              ${formatDate(t.due_date)}
+            </td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div class="progress-container" style="width: 60px; margin: 0;">
+                  <div class="progress-bar" style="width: ${t.progress}%"></div>
+                </div>
+                <span style="font-size: 12px;">${t.progress}%</span>
+              </div>
+            </td>
+            <td>
+              <div style="display: flex; gap: 5px;">
+                ${userManager.isManager() ? `<button class="btn btn-danger btn-sm" onclick="deleteTask(${t.id})">🗑️</button>` : ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    const taskModal = document.getElementById('taskModal');
+    document.getElementById('addTaskBtn').onclick = async () => {
+      const users = await getAllUsers();
+      const select = document.getElementById('taskAssignee');
+      select.innerHTML = users.map(u => `<option value="${u.id}">${u.full_name} (${userManager.getRoleLabel(u.role)})</option>`).join('');
+      taskModal.style.display = 'flex';
+    };
+
+    function closeTaskModal() { taskModal.style.display = 'none'; }
+
+    document.getElementById('saveTaskBtn').onclick = async () => {
+      const taskData = {
+        title: document.getElementById('taskTitle').value,
+        description: document.getElementById('taskDesc').value,
+        projectId: projectId,
+        assignedTo: document.getElementById('taskAssignee').value,
+        priority: document.getElementById('taskPriority').value,
+        startDate: document.getElementById('taskStart').value,
+        dueDate: document.getElementById('taskDue').value,
+        isExtra: document.getElementById('taskIsExtra').checked,
+        tags: document.getElementById('taskTags').value
+      };
+
+      if (!taskData.title || !taskData.dueDate) { alert('يرجى إدخال العنوان وتاريخ الاستحقاق'); return; }
+
+      try {
+        await taskManager.createTask(taskData, currentUser.id);
+        closeTaskModal();
+        loadTasks();
+      } catch (e) { alert('حدث خطأ أثناء إنشاء المهمة'); }
+    };
+
+    async function deleteTask(id) {
+      if (confirm('هل أنت متأكد من حذف هذه المهمة؟')) {
+        await taskManager.deleteTask(id, currentUser.id);
+        loadTasks();
+      }
+    }
+
+    document.getElementById('deleteProjectBtn').onclick = async () => {
+      if (confirm('⚠️ تحذير: سيتم حذف المشروع وكافة المهام والتعليقات المرتبطة به. هل أنت متأكد؟')) {
+        await projectManager.deleteProject(projectId, currentUser.id);
+        window.location.href = 'projects.html';
+      }
+    };
+
+    loadProjectDetails();
+  </script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تحليلات الفريق والتقارير - نظام إدارة المشاريع</title>
+  <link rel="icon" type="image/png" href="assets/images/1.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/main.css">
+  <!-- مكتبة Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="assets/images/1.png" alt="Logo" class="logo-main" onerror="this.src='https://via.placeholder.com/80?text=Logo'">
+        <div style="text-align: center; font-weight: 700; font-size: 18px;">نظام إدارة المشاريع</div>
+        <img src="assets/images/2.png" alt="Team Logo" class="logo-team" onerror="this.src='https://via.placeholder.com/40?text=Team'">
+      </div>
+      <nav class="sidebar-nav">
+        <li><a href="dashboard.html">📈 <span>لوحة التحكم</span></a></li>
+        <li><a href="projects.html">📁 <span>المشاريع</span></a></li>
+        <li><a href="my-tasks.html">👉 <span>مهامي</span></a></li>
+        <li><a href="calendar.html">📅 <span>التقويم</span></a></li>
+        <li id="analyticsLink" style="display: none;"><a href="team-analytics.html" class="active">🔬 <span>تحليلات الفريق</span></a></li>
+      </nav>
+    </aside>
+
+    <div class="main-content">
+      <nav class="navbar animate-fade">
+        <div class="navbar-brand">
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <span>تحليلات أداء الفريق والتقارير</span>
+        <div class="navbar-right">
+          <div class="user-info">
+            <div class="user-avatar" id="userAvatar">ع</div>
+            <div>
+              <div id="userName" style="font-weight: 700;">المستخدم</div>
+              <div id="userRole" style="font-size: 12px; color: var(--text-muted);">مستخدم</div>
+            </div>
+          </div>
+          <button class="btn btn-danger btn-sm" id="logoutBtn">تسجيل الخروج</button>
+        </div>
+      </nav>
+
+      <div class="content">
+        <!-- قسم تصدير التقارير -->
+        <div class="card animate-slide" style="margin-bottom: 30px; border-right: 5px solid var(--primary);">
+          <h3 style="margin-bottom: 20px;">📊 تصدير تقارير الأداء (Excel)</h3>
+          <div class="grid grid-3" style="gap: 15px; align-items: flex-end;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label>اختر العضو</label>
+              <select id="reportUserSelect" class="form-control">
+                <option value="">-- اختر عضواً --</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label>الفترة الزمنية</label>
+              <select id="reportPeriodSelect" class="form-control">
+                <option value="all">كل الأوقات</option>
+                <option value="week">آخر أسبوع</option>
+                <option value="month">آخر شهر</option>
+              </select>
+            </div>
+            <button class="btn btn-success" id="exportExcelBtn" style="height: 45px; justify-content: center;">تصدير التقرير 📥</button>
+          </div>
+        </div>
+
+        <div class="grid grid-3 animate-fade" id="analyticsKPIs">
+          <div class="stat-card card">
+            <div class="stat-value" id="avgCompletion">0%</div>
+            <div class="stat-label">متوسط معدل الإنجاز</div>
+          </div>
+          <div class="stat-card card danger">
+            <div class="stat-value" id="totalOverdue">0</div>
+            <div class="stat-label">إجمالي المتأخرات</div>
+          </div>
+          <div class="stat-card card success">
+            <div class="stat-value" id="activeMembers">0</div>
+            <div class="stat-label">أعضاء الفريق النشطين</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 40px;" class="animate-slide">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <h2>أداء أعضاء الفريق (تحليل ذكي)</h2>
+            <button class="btn btn-primary btn-sm" onclick="loadAnalytics()">تحديث البيانات 🔄</button>
+          </div>
+          <div class="card table-container">
+            <table class="table" id="teamTable">
+              <thead>
+                <tr>
+                  <th>العضو</th>
+                  <th>المهام</th>
+                  <th>المكتملة</th>
+                  <th>المتأخرة</th>
+                  <th>معدل الإنجاز</th>
+                  <th>التقييم الذكي</th>
+                </tr>
+              </thead>
+              <tbody id="teamStatsBody">
+                <tr><td colspan="6" style="text-align: center; padding: 30px;">جاري تحليل البيانات...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <footer class="footer">
+        جميع الحقوق محفوظة &copy; <span class="footer-name">Mohamed Sayed Zaky</span> - 2026
+      </footer>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="scripts/supabase-client.js"></script>
+  <script>
+    if (!userManager.isLoggedIn() || !userManager.isManager()) window.location.href = 'dashboard.html';
+    const currentUser = userManager.getCurrentUser();
+
+    document.getElementById('userName').textContent = currentUser.full_name;
+    document.getElementById('userRole').textContent = userManager.getRoleLabel(currentUser.role);
+    document.getElementById('userAvatar').textContent = currentUser.full_name.charAt(0);
+    document.getElementById('analyticsLink').style.display = 'block';
+
+    const menuToggle = document.getElementById("menuToggle");
+    const sidebar = document.getElementById("sidebar");
+    if (menuToggle && sidebar) menuToggle.onclick = () => sidebar.classList.toggle("active");
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    if (logoutBtn) {
+      logoutBtn.onclick = () => {
+        if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+          userManager.logout();
+          window.location.href = 'login.html';
+        }
+      };
+    }
+
+    async function loadAnalytics() {
+      const tbody = document.getElementById('teamStatsBody');
+      const userSelect = document.getElementById('reportUserSelect');
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px;">جاري تحليل البيانات...</td></tr>';
+
+      try {
+        const projects = await projectManager.getProjects(currentUser);
+        const projectIds = projects.map(p => p.id);
+        
+        if (projectIds.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px;">لا توجد مشاريع لتحليلها</td></tr>';
+          return;
+        }
+
+        const tasks = await taskManager.getTasksForProjects(projectIds);
+        const users = await getAllUsers();
+
+        // ملء قائمة الموظفين للتقرير
+        userSelect.innerHTML = '<option value="">-- اختر عضواً --</option>' + 
+          users.map(u => `<option value="${u.id}">${u.full_name}</option>`).join('');
+
+        const today = new Date().toISOString().split('T')[0];
+        const overdueTasks = tasks.filter(t => t.due_date && t.due_date < today && t.status !== 'done');
+        
+        document.getElementById('totalOverdue').textContent = overdueTasks.length;
+        document.getElementById('avgCompletion').textContent = calculateProgress(tasks) + '%';
+        document.getElementById('activeMembers').textContent = users.length;
+
+        const teamStats = users.map(user => {
+          const userTasks = tasks.filter(t => t.assigned_to == user.id);
+          const completed = userTasks.filter(t => t.status === 'done').length;
+          const overdue = userTasks.filter(t => t.due_date && t.due_date < today && t.status !== 'done').length;
+          const rate = userTasks.length > 0 ? Math.round((completed / userTasks.length) * 100) : 0;
+          
+          const rating = statsManager.calculateRating(rate, overdue);
+
+          return {
+            name: user.full_name,
+            total: userTasks.length,
+            completed,
+            overdue,
+            rate,
+            rating: rating.label,
+            ratingClass: rating.class
+          };
+        });
+
+        tbody.innerHTML = teamStats.map(s => `
+          <tr class="animate-fade">
+            <td><strong>${s.name}</strong></td>
+            <td>${s.total}</td>
+            <td>${s.completed}</td>
+            <td><span style="color: ${s.overdue > 0 ? 'var(--danger)' : 'inherit'}; font-weight: 700;">${s.overdue}</span></td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="flex: 1; height: 8px; background: #eee; border-radius: 4px; overflow: hidden;">
+                  <div style="width: ${s.rate}%; height: 100%; background: var(--primary); transition: width 0.5s ease;"></div>
+                </div>
+                <span style="font-weight: 700;">${s.rate}%</span>
+              </div>
+            </td>
+            <td><span class="badge ${s.ratingClass}">${s.rating}</span></td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Analytics error:', error);
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px; color: var(--danger);">حدث خطأ أثناء تحميل التحليلات</td></tr>';
+      }
+    }
+
+    // وظيفة تصدير Excel
+    document.getElementById('exportExcelBtn').onclick = async () => {
+      const userId = document.getElementById('reportUserSelect').value;
+      const period = document.getElementById('reportPeriodSelect').value;
+      const userName = document.getElementById('reportUserSelect').options[document.getElementById('reportUserSelect').selectedIndex].text;
+
+      if (!userId) {
+        alert('يرجى اختيار عضو لتصدير التقرير');
+        return;
+      }
+
+      const btn = document.getElementById('exportExcelBtn');
+      btn.disabled = true;
+      btn.textContent = 'جاري التصدير... ⏳';
+
+      try {
+        const data = await reportManager.getUserReportData(userId, period);
+        
+        if (data.length === 0) {
+          alert('لا توجد بيانات لهذا العضو في الفترة المختارة');
+          btn.disabled = false;
+          btn.textContent = 'تصدير التقرير 📥';
+          return;
+        }
+
+        // تحضير البيانات لملف Excel
+        const excelData = data.map(t => ({
+          'اسم المهمة': t.title,
+          'المشروع': t.projects?.name || 'غير معروف',
+          'الحالة': getStatusLabel(t.status),
+          'الأولوية': getPriorityLabel(t.priority),
+          'نسبة الإنجاز': t.progress + '%',
+          'تاريخ الاستحقاق': formatDate(t.due_date),
+          'تاريخ الإنشاء': new Date(t.created_at).toLocaleDateString('ar-EG'),
+          'الوسوم': t.tags || '-'
+        }));
+
+        // إنشاء ملف Excel
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "تقرير الأداء");
+
+        // تحميل الملف
+        const fileName = `تقرير_${userName}_${period}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+
+      } catch (error) {
+        console.error('Export error:', error);
+        alert('حدث خطأ أثناء تصدير التقرير');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'تصدير التقرير 📥';
+      }
+    };
+
+    loadAnalytics();
+  </script>
+</body>
+</html>
