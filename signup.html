@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إنشاء حساب جديد | نظام إدارة المشاريع</title>
+  <link rel="icon" type="image/png" href="assets/images/1.png">
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="auth-container">
+  <div class="auth-card animate-fade" style="max-width: 500px;">
+    <img src="assets/images/1.png" alt="Logo" class="auth-logo" onerror="this.src='https://via.placeholder.com/100?text=Logo'">
+    <h1 class="auth-title">انضم إلينا</h1>
+    <p class="auth-subtitle">ابدأ رحلتك في إدارة المشاريع باحترافية</p>
+    
+    <form id="signupForm">
+      <div class="grid grid-2" style="text-align: right;">
+        <div class="form-group">
+          <label for="fullName">الاسم الكامل</label>
+          <input type="text" id="fullName" class="form-control" placeholder="محمد أحمد" required>
+        </div>
+        <div class="form-group">
+          <label for="phone">رقم الهاتف</label>
+          <input type="tel" id="phone" class="form-control" placeholder="0123456789" required>
+        </div>
+      </div>
+      
+      <div class="form-group" style="text-align: right;">
+        <label for="email">البريد الإلكتروني</label>
+        <input type="email" id="email" class="form-control" placeholder="example@mail.com" required>
+      </div>
+      
+      <div class="form-group" style="text-align: right;">
+        <label for="password">كلمة المرور</label>
+        <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+      </div>
+      
+      <div class="form-group" style="text-align: right;">
+        <label for="role">نوع الحساب</label>
+        <select id="role" class="form-control" required>
+          <option value="member">عضو فريق</option>
+          <option value="manager">مدير مشروع</option>
+        </select>
+      </div>
+      
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+        <i class="fas fa-user-plus"></i> إنشاء الحساب
+      </button>
+    </form>
+    
+    <div id="errorMessage" style="color: var(--danger); margin-top: 15px; font-size: 14px; display: none;"></div>
+    <div id="successMessage" style="color: var(--success); margin-top: 15px; font-size: 14px; display: none;">
+      تم إنشاء الحساب بنجاح! جاري التحويل لتسجيل الدخول...
+    </div>
+    
+    <div style="margin-top: 25px; color: var(--text-muted); font-size: 14px;">
+      لديك حساب بالفعل؟ <a href="login.html" style="color: var(--primary); font-weight: 700; text-decoration: none;">تسجيل الدخول</a>
+    </div>
+    
+    <div style="margin-top: 30px; font-size: 12px; color: var(--text-muted);">
+      جميع الحقوق محفوظة &copy; <span class="footer-name">Mohamed Sayed Zaky</span>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="scripts/supabase-client.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.userManager.isLoggedIn()) {
+        window.location.href = 'dashboard.html';
+      }
+
+      const signupForm = document.getElementById('signupForm');
+      const errorDiv = document.getElementById('errorMessage');
+      const successDiv = document.getElementById('successMessage');
+      
+      signupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fullName = document.getElementById('fullName').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const phone = document.getElementById('phone').value;
+        const role = document.getElementById('role').value;
+        const btn = e.target.querySelector('button');
+        
+        try {
+          errorDiv.style.display = 'none';
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري إنشاء الحساب...';
+          
+          await window.userManager.signup(fullName, email, password, phone, role);
+          successDiv.style.display = 'block';
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 2000);
+        } catch (error) {
+          errorDiv.textContent = error.message;
+          errorDiv.style.display = 'block';
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء الحساب';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

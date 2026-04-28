@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المشاريع - نظام إدارة المشاريع</title>
+  <link rel="icon" type="image/png" href="assets/images/1.png">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="assets/images/1.png" alt="Logo" class="logo-main" onerror="this.src='https://via.placeholder.com/80?text=Logo'">
+        <div style="text-align: center; font-weight: 700; font-size: 18px;">نظام إدارة المشاريع</div>
+      </div>
+      <nav class="sidebar-nav">
+        <li><a href="dashboard.html"><i class="fas fa-chart-line"></i> <span>لوحة التحكم</span></a></li>
+        <li><a href="projects.html" class="active"><i class="fas fa-folder"></i> <span>المشاريع</span></a></li>
+        <li><a href="my-tasks.html"><i class="fas fa-tasks"></i> <span>مهامي</span></a></li>
+        <li><a href="calendar.html"><i class="fas fa-calendar-alt"></i> <span>التقويم</span></a></li>
+        <li id="analyticsLink" style="display: none;"><a href="team-analytics.html"><i class="fas fa-microscope"></i> <span>تحليلات الفريق</span></a></li>
+      </nav>
+    </aside>
+
+    <div class="main-content">
+      <nav class="navbar animate-fade">
+        <div class="navbar-brand">
+          <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+          <span>إدارة المشاريع</span>
+        </div>
+        <div class="navbar-right">
+          <button class="btn btn-primary btn-sm" id="addProjectBtn" style="display: none;"><i class="fas fa-plus"></i> <span>مشروع جديد</span></button>
+          <div class="user-info">
+            <div class="user-avatar" id="userAvatar">ع</div>
+            <div class="user-details">
+              <div id="userName" style="font-weight: 700;">المستخدم</div>
+              <div id="userRole" style="font-size: 12px; color: var(--text-muted);">مستخدم</div>
+            </div>
+          </div>
+          <!-- <button class="btn btn-danger btn-sm" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>خروج</span></button> -->
+        </div>
+      </nav>
+
+      <div class="content page-fade-in">
+        <div id="projectsGrid" class="grid grid-3 animate-fade">
+          <div class="loading-shimmer">
+            <div class="shimmer-card"><div class="shimmer-line full"></div><div class="shimmer-line medium"></div><div class="shimmer-line short"></div></div>
+            <div class="shimmer-card"><div class="shimmer-line full"></div><div class="shimmer-line medium"></div><div class="shimmer-line short"></div></div>
+            <div class="shimmer-card"><div class="shimmer-line full"></div><div class="shimmer-line medium"></div><div class="shimmer-line short"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="footer">
+        جميع الحقوق محفوظة &copy; <span class="footer-name">Mohamed Sayed Zaky</span> - 2026
+      </footer>
+    </div>
+  </div>
+
+  <!-- نافذة إضافة مشروع -->
+  <div class="modal-overlay" id="projectModal">
+    <div class="modal modal-animated">
+      <div class="modal-header">
+        <h3><i class="fas fa-folder-plus" style="color:var(--primary); margin-left:8px;"></i> إنشاء مشروع جديد</h3>
+        <button class="btn btn-secondary btn-sm" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>اسم المشروع</label>
+          <input type="text" id="projectName" class="form-control" placeholder="مثلاً: تطوير الموقع الإلكتروني">
+        </div>
+        <div class="form-group">
+          <label>وصف المشروع</label>
+          <textarea id="projectDesc" class="form-control" rows="3" placeholder="وصف مختصر للمشروع..."></textarea>
+        </div>
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label>تاريخ البداية</label>
+            <input type="date" id="projectStart" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>تاريخ النهاية</label>
+            <input type="date" id="projectEnd" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>الأولوية</label>
+          <select id="projectPriority" class="form-control">
+            <option value="low">منخفضة</option>
+            <option value="medium" selected>متوسطة</option>
+            <option value="high">عالية</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">إلغاء</button>
+        <button class="btn btn-primary" id="saveProjectBtn"><i class="fas fa-save"></i> إنشاء المشروع</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة تعديل مشروع -->
+  <div class="modal-overlay" id="editProjectModal">
+    <div class="modal modal-animated">
+      <div class="modal-header">
+        <h3><i class="fas fa-edit" style="color:var(--primary); margin-left:8px;"></i> تعديل المشروع</h3>
+        <button class="btn btn-secondary btn-sm" onclick="closeEditModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editProjectId">
+        <div class="form-group">
+          <label>اسم المشروع</label>
+          <input type="text" id="editProjectName" class="form-control">
+        </div>
+        <div class="form-group">
+          <label>وصف المشروع</label>
+          <textarea id="editProjectDesc" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label>تاريخ البداية</label>
+            <input type="date" id="editProjectStart" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>تاريخ النهاية</label>
+            <input type="date" id="editProjectEnd" class="form-control">
+          </div>
+        </div>
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label>الأولوية</label>
+            <select id="editProjectPriority" class="form-control">
+              <option value="low">منخفضة</option>
+              <option value="medium">متوسطة</option>
+              <option value="high">عالية</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>الحالة</label>
+            <select id="editProjectStatus" class="form-control">
+              <option value="active">نشط</option>
+              <option value="on_hold">متوقف مؤقتاً</option>
+              <option value="completed">مكتمل</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEditModal()">إلغاء</button>
+        <button class="btn btn-primary" id="saveEditProjectBtn"><i class="fas fa-save"></i> حفظ التعديلات</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="scripts/supabase-client.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!window.userManager.isLoggedIn()) window.location.href = 'login.html';
+      const currentUser = window.userManager.getCurrentUser();
+      const isManager = window.userManager.isManager();
+      let allProjectsList = [];
+
+      document.getElementById('userName').textContent = currentUser.full_name;
+      document.getElementById('userRole').textContent = window.userManager.getRoleLabel(currentUser.role);
+      document.getElementById('userAvatar').textContent = currentUser.full_name.charAt(0);
+      
+      if (isManager) {
+        document.getElementById('addProjectBtn').style.display = 'flex';
+        document.getElementById('analyticsLink').style.display = 'block';
+      }
+
+      const menuToggle = document.getElementById('menuToggle');
+      const sidebar = document.getElementById('sidebar');
+      menuToggle.onclick = () => sidebar.classList.toggle('active');
+
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.onclick = () => {
+          if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+            userManager.logout();
+            window.location.href = 'login.html';
+          }
+        };
+      }
+
+      // ===== CREATE PROJECT MODAL =====
+      const modal = document.getElementById('projectModal');
+      document.getElementById('addProjectBtn').onclick = () => {
+        modal.style.display = 'flex';
+        requestAnimationFrame(() => modal.querySelector('.modal-animated').classList.add('modal-show'));
+      };
+      window.closeModal = () => {
+        modal.querySelector('.modal-animated').classList.remove('modal-show');
+        setTimeout(() => modal.style.display = 'none', 250);
+      };
+
+      // ===== EDIT PROJECT MODAL =====
+      const editModal = document.getElementById('editProjectModal');
+      window.closeEditModal = () => {
+        editModal.querySelector('.modal-animated').classList.remove('modal-show');
+        setTimeout(() => editModal.style.display = 'none', 250);
+      };
+
+      window.openEditModal = (projectId) => {
+        const p = allProjectsList.find(x => x.id == projectId);
+        if (!p) return;
+        document.getElementById('editProjectId').value = p.id;
+        document.getElementById('editProjectName').value = p.name;
+        document.getElementById('editProjectDesc').value = p.description || '';
+        document.getElementById('editProjectStart').value = p.start_date || '';
+        document.getElementById('editProjectEnd').value = p.end_date || '';
+        document.getElementById('editProjectPriority').value = p.priority || 'medium';
+        document.getElementById('editProjectStatus').value = p.status || 'active';
+        editModal.style.display = 'flex';
+        requestAnimationFrame(() => editModal.querySelector('.modal-animated').classList.add('modal-show'));
+      };
+
+      document.getElementById('saveEditProjectBtn').onclick = async () => {
+        const id = document.getElementById('editProjectId').value;
+        const updates = {
+          name: document.getElementById('editProjectName').value,
+          description: document.getElementById('editProjectDesc').value,
+          start_date: document.getElementById('editProjectStart').value || null,
+          end_date: document.getElementById('editProjectEnd').value || null,
+          priority: document.getElementById('editProjectPriority').value,
+          status: document.getElementById('editProjectStatus').value
+        };
+        if (!updates.name) { alert('يرجى إدخال اسم المشروع'); return; }
+        const btn = document.getElementById('saveEditProjectBtn');
+        btn.disabled = true;
+        try {
+          const { error } = await supabaseClient.from('projects').update(updates).eq('id', id);
+          if (error) throw error;
+          window.closeEditModal();
+          loadProjects();
+        } catch(e) { alert('حدث خطأ أثناء حفظ التعديلات'); }
+        finally { btn.disabled = false; }
+      };
+
+      // ===== STATUS LABEL =====
+      function getProjectStatusLabel(status) {
+        const map = { 'active': 'نشط', 'on_hold': 'متوقف', 'completed': 'مكتمل' };
+        return map[status] || 'نشط';
+      }
+      function getProjectStatusClass(status) {
+        const map = { 'active': 'badge-success', 'on_hold': 'badge-warning', 'completed': 'badge-info' };
+        return map[status] || 'badge-success';
+      }
+
+      // ===== LOAD PROJECTS =====
+      async function loadProjects() {
+        const grid = document.getElementById('projectsGrid');
+        grid.innerHTML = `<div class="loading-shimmer">
+          <div class="shimmer-card"><div class="shimmer-line full"></div><div class="shimmer-line medium"></div><div class="shimmer-line short"></div></div>
+          <div class="shimmer-card"><div class="shimmer-line full"></div><div class="shimmer-line medium"></div><div class="shimmer-line short"></div></div>
+          <div class="shimmer-card"><div class="shimmer-line full"></div><div class="shimmer-line medium"></div><div class="shimmer-line short"></div></div>
+        </div>`;
+
+        try {
+          const projects = await window.projectManager.getProjects(currentUser);
+          allProjectsList = projects;
+          
+          if (projects.length === 0) {
+            grid.innerHTML = `<div class="tasks-empty" style="grid-column:1/-1;">
+              <i class="fas fa-folder-open"></i>
+              <p>لا توجد مشاريع حالياً</p>
+            </div>`;
+            return;
+          }
+
+          const projectIds = projects.map(p => p.id);
+          const allTasks = await window.taskManager.getTasksForProjects(projectIds);
+          const today = new Date().toISOString().split('T')[0];
+
+          grid.innerHTML = projects.map(p => {
+            const projectTasks = allTasks.filter(t => t.project_id === p.id);
+            const progress = window.calculateProgress(projectTasks);
+            const remaining = window.calculateRemainingDays(p.end_date);
+            const priorityLabel = window.getPriorityLabel(p.priority);
+            const priorityBadge = p.priority === 'high' ? 'badge-danger' : p.priority === 'medium' ? 'badge-warning' : 'badge-info';
+            const statusLabel = getProjectStatusLabel(p.status);
+            const statusBadge = getProjectStatusClass(p.status);
+
+            const totalTasks = projectTasks.length;
+            const completedTasks = projectTasks.filter(t => t.status === 'done').length;
+            const remainingTasks = totalTasks - completedTasks;
+            const overdueTasks = projectTasks.filter(t => t.due_date && t.due_date < today && t.status !== 'done').length;
+            const isUrgent = remaining < 3 && remaining >= 0 && p.status !== 'completed';
+            const progressColor = progress >= 75 ? 'var(--success)' : progress >= 40 ? 'var(--warning)' : 'var(--danger)';
+
+            if (!isManager) {
+              // عرض مبسط للأعضاء
+              return `
+                <div class="project-card animate-slide">
+                  <div class="project-card-top">
+                    <div class="project-card-icon"><i class="fas fa-folder"></i></div>
+                    <div style="flex:1; min-width:0;">
+                      <h3 class="project-card-title">${p.name}</h3>
+                      <span class="badge ${statusBadge}" style="font-size:11px;">${statusLabel}</span>
+                    </div>
+                  </div>
+                  <div class="project-card-footer">
+                    <a href="project-details.html?id=${p.id}" class="btn btn-primary" style="width:100%; justify-content:center;">
+                      <i class="fas fa-eye"></i> عرض المهام
+                    </a>
+                  </div>
+                </div>
+              `;
+            }
+
+            return `
+              <div class="project-card animate-slide ${isUrgent ? 'project-card-urgent' : ''}">
+                <div class="project-card-top">
+                  <div class="project-card-icon ${p.priority === 'high' ? 'icon-danger' : p.priority === 'medium' ? 'icon-warning' : 'icon-success'}">
+                    <i class="fas fa-folder"></i>
+                  </div>
+                  <div style="flex:1; min-width:0;">
+                    <h3 class="project-card-title">${p.name}</h3>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+                      <span class="badge ${statusBadge}" style="font-size:11px;">${statusLabel}</span>
+                      <span class="badge ${priorityBadge}" style="font-size:11px;">${priorityLabel}</span>
+                    </div>
+                  </div>
+                  ${isManager ? `<button class="btn-icon-edit" onclick="openEditModal('${p.id}')" title="تعديل المشروع"><i class="fas fa-pencil-alt"></i></button>` : ''}
+                </div>
+
+                <p class="project-card-desc">${p.description || 'لا يوجد وصف'}</p>
+
+                <div class="project-stats-grid">
+                  <div class="project-stat-item">
+                    <div class="project-stat-value">${totalTasks}</div>
+                    <div class="project-stat-label">إجمالي</div>
+                  </div>
+                  <div class="project-stat-item">
+                    <div class="project-stat-value" style="color:var(--success);">${completedTasks}</div>
+                    <div class="project-stat-label">مكتملة</div>
+                  </div>
+                  <div class="project-stat-item">
+                    <div class="project-stat-value" style="color:var(--warning);">${remainingTasks}</div>
+                    <div class="project-stat-label">متبقية</div>
+                  </div>
+                  <div class="project-stat-item">
+                    <div class="project-stat-value" style="color:${overdueTasks > 0 ? 'var(--danger)' : 'var(--text-muted)'};">${overdueTasks}</div>
+                    <div class="project-stat-label">متأخرة</div>
+                  </div>
+                </div>
+
+                <div class="project-progress-section">
+                  <div class="project-progress-header">
+                    <span>نسبة الإنجاز</span>
+                    <span style="font-weight:700; color:${progressColor};">${progress}%</span>
+                  </div>
+                  <div class="project-progress-bg">
+                    <div class="project-progress-fill" style="width:${progress}%; background:${progressColor};"></div>
+                  </div>
+                </div>
+
+                <div class="project-dates-row">
+                  <div class="project-date-item">
+                    <i class="fas fa-calendar-check" style="color:var(--primary);"></i>
+                    <span>ينتهي: <strong>${window.formatDate(p.end_date)}</strong></span>
+                  </div>
+                  <div class="project-date-item ${isUrgent ? 'text-danger' : ''}">
+                    <i class="fas fa-hourglass-half" style="color:${isUrgent ? 'var(--danger)' : 'var(--text-muted)'};"></i>
+                    <span style="color:${isUrgent ? 'var(--danger)' : 'inherit'}; font-weight:${isUrgent ? '700' : '400'};">متبقي: ${remaining} يوم</span>
+                  </div>
+                </div>
+
+                <div class="project-card-footer">
+                  <a href="project-details.html?id=${p.id}" class="btn btn-primary" style="flex:1; justify-content:center;">
+                    <i class="fas fa-eye"></i> عرض التفاصيل
+                  </a>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } catch (error) {
+          console.error('Error loading projects:', error);
+          grid.innerHTML = `<div class="tasks-empty" style="grid-column:1/-1;">
+            <i class="fas fa-exclamation-circle" style="color:var(--danger);"></i>
+            <p>حدث خطأ أثناء تحميل المشاريع</p>
+          </div>`;
+        }
+      }
+
+      document.getElementById('saveProjectBtn').onclick = async () => {
+        const name = document.getElementById('projectName').value;
+        const desc = document.getElementById('projectDesc').value;
+        const start = document.getElementById('projectStart').value;
+        const end = document.getElementById('projectEnd').value;
+        const priority = document.getElementById('projectPriority').value;
+
+        if (!name || !end) { alert('يرجى إدخال اسم المشروع وتاريخ النهاية'); return; }
+
+        const btn = document.getElementById('saveProjectBtn');
+        btn.disabled = true;
+        try {
+          await window.projectManager.createProject(name, desc, start, end, priority, currentUser.id);
+          window.closeModal();
+          loadProjects();
+        } catch (e) { alert('حدث خطأ أثناء إنشاء المشروع'); }
+        finally { btn.disabled = false; }
+      };
+
+      loadProjects();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة التحكم - نظام إدارة المشاريع</title>
+  <link rel="icon" type="image/png" href="assets/images/1.png">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="assets/images/1.png" alt="Logo" class="logo-main" onerror="this.src='https://via.placeholder.com/80?text=Logo'">
+        <div style="text-align: center; font-weight: 700; font-size: 18px;">نظام إدارة المشاريع</div>
+      </div>
+      <nav class="sidebar-nav">
+        <li><a href="dashboard.html" class="active"><i class="fas fa-chart-line"></i> <span>لوحة التحكم</span></a></li>
+        <li><a href="projects.html"><i class="fas fa-folder"></i> <span>المشاريع</span></a></li>
+        <li><a href="my-tasks.html"><i class="fas fa-tasks"></i> <span>مهامي</span></a></li>
+        <li><a href="calendar.html"><i class="fas fa-calendar-alt"></i> <span>التقويم</span></a></li>
+        <li id="analyticsLink" style="display: none;"><a href="team-analytics.html"><i class="fas fa-microscope"></i> <span>تحليلات الفريق</span></a></li>
+      </nav>
+    </aside>
+
+    <div class="main-content">
+      <nav class="navbar animate-fade">
+        <div class="navbar-brand">
+          <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+          <span>لوحة التحكم</span>
+        </div>
+        <div class="navbar-right">
+          <div class="user-info">
+            <div class="user-avatar" id="userAvatar">ع</div>
+            <div class="user-details">
+              <div id="userName" style="font-weight: 700;">المستخدم</div>
+              <div id="userRole" style="font-size: 12px; color: var(--text-muted);">مستخدم</div>
+            </div>
+          </div>
+          <button class="btn btn-danger btn-sm" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>خروج</span></button>
+        </div>
+      </nav>
+
+      <div class="content page-fade-in">
+        <h2 style="margin-bottom: 25px;" id="dashboardTitle" class="animate-slide">إحصائيات النظام</h2>
+        
+        <!-- واجهة الأدمن والمدير -->
+        <div id="managerStats" class="grid grid-4 animate-fade" style="display: none;">
+          <div class="stat-card card">
+            <div class="stat-value" id="managerProjects">0</div>
+            <div class="stat-label">إجمالي المشاريع</div>
+          </div>
+          <div class="stat-card card warning">
+            <div class="stat-value" id="managerTasks">0</div>
+            <div class="stat-label">إجمالي المهام</div>
+          </div>
+          <div class="stat-card card success">
+            <div class="stat-value" id="managerCompleted">0</div>
+            <div class="stat-label">مهام مكتملة</div>
+          </div>
+          <div class="stat-card card danger">
+            <div class="stat-value" id="managerOverdue">0</div>
+            <div class="stat-label">مهام متأخرة</div>
+          </div>
+        </div>
+
+        <!-- واجهة العضو -->
+        <div id="memberStats" class="grid grid-4 animate-fade" style="display: none;">
+          <div class="stat-card card">
+            <div class="stat-value" id="memberTotal">0</div>
+            <div class="stat-label">إجمالي مهامي</div>
+          </div>
+          <div class="stat-card card success">
+            <div class="stat-value" id="memberCompleted">0</div>
+            <div class="stat-label">مهام أنجزتها</div>
+          </div>
+          <div class="stat-card card warning">
+            <div class="stat-value" id="memberRemaining">0</div>
+            <div class="stat-label">مهام متبقية</div>
+          </div>
+          <div class="stat-card card danger">
+            <div class="stat-value" id="memberOverdue">0</div>
+            <div class="stat-label">مهام متأخرة</div>
+          </div>
+        </div>
+
+        <div id="activitySection" style="margin-top: 40px; display: none;" class="animate-fade">
+          <h2 style="margin-bottom: 20px;">سجل الأنشطة الحديثة</h2>
+          <div class="card">
+            <ul class="activity-list" id="activityList" style="list-style: none; padding: 0;">
+              <li class="activity-item" style="padding: 15px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 15px;">
+                <div class="activity-icon">📝</div>
+                <div class="activity-content">
+                  <div class="activity-title">جاري تحميل الأنشطة...</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <footer class="footer">
+        جميع الحقوق محفوظة &copy; <span class="footer-name">Mohamed Sayed Zaky</span> - 2026
+      </footer>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="scripts/supabase-client.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!window.userManager.isLoggedIn()) window.location.href = 'login.html';
+      const currentUser = window.userManager.getCurrentUser();
+
+      document.getElementById('userName').textContent = currentUser.full_name;
+      document.getElementById('userRole').textContent = window.userManager.getRoleLabel(currentUser.role);
+      document.getElementById('userAvatar').textContent = currentUser.full_name.charAt(0);
+      
+      if (window.userManager.isManager()) {
+        document.getElementById('analyticsLink').style.display = 'block';
+        document.getElementById('activitySection').style.display = 'block';
+      }
+
+      // Mobile Menu Toggle
+      const menuToggle = document.getElementById('menuToggle');
+      const sidebar = document.getElementById('sidebar');
+      menuToggle.onclick = () => sidebar.classList.toggle('active');
+
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    if (logoutBtn) {
+      logoutBtn.onclick = () => {
+        if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+          userManager.logout();
+          window.location.href = 'login.html';
+        }
+      };
+    }
+
+      async function loadDashboard() {
+        try {
+          if (window.userManager.isManager()) {
+            document.getElementById('managerStats').style.display = 'grid';
+            
+            // جلب المشاريع
+            const projects = await window.projectManager.getProjects(currentUser);
+            const projectIds = projects.map(p => p.id);
+            
+            // جلب المهام
+            const tasks = await window.taskManager.getTasksForProjects(projectIds);
+            const now = new Date();
+            
+            const stats = {
+              projectsCount: projects.length,
+              totalTasks: tasks.length,
+              completedTasks: tasks.filter(t => t.status === 'done').length,
+              overdueTasks: tasks.filter(t => t.status !== 'done' && t.due_date && new Date(t.due_date) < now).length
+            };
+
+            document.getElementById('managerProjects').textContent = stats.projectsCount;
+            document.getElementById('managerTasks').textContent = stats.totalTasks;
+            document.getElementById('managerCompleted').textContent = stats.completedTasks;
+            document.getElementById('managerOverdue').textContent = stats.overdueTasks;
+
+            const logs = await window.getActivityLog(currentUser);
+            const activityList = document.getElementById('activityList');
+            if (logs.length > 0) {
+              activityList.innerHTML = logs.map(log => `
+                <li class="activity-item animate-slide" style="padding: 15px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 15px;">
+                  <div class="activity-icon" style="font-size: 20px;">${log.entity_type === 'project' ? '📁' : '📝'}</div>
+                  <div class="activity-content">
+                    <div class="activity-title"><strong>${log.users?.full_name}</strong> ${log.action}</div>
+                    <div class="activity-time" style="font-size: 12px; color: var(--text-muted);">${new Date(log.created_at).toLocaleString('ar-EG')}</div>
+                  </div>
+                </li>
+              `).join('');
+            } else {
+              activityList.innerHTML = '<li class="activity-item" style="padding: 15px; text-align: center;">لا توجد أنشطة مسجلة بعد</li>';
+            }
+          } else {
+            document.getElementById('memberStats').style.display = 'grid';
+            const tasks = await window.taskManager.getMyTasks(currentUser.id);
+            const now = new Date();
+            
+            const stats = {
+              total: tasks.length,
+              completed: tasks.filter(t => t.status === 'done').length,
+              remaining: tasks.filter(t => t.status !== 'done').length,
+              overdue: tasks.filter(t => t.status !== 'done' && t.due_date && new Date(t.due_date) < now).length
+            };
+
+            document.getElementById('memberTotal').textContent = stats.total;
+            document.getElementById('memberCompleted').textContent = stats.completed;
+            document.getElementById('memberRemaining').textContent = stats.remaining;
+            document.getElementById('memberOverdue').textContent = stats.overdue;
+          }
+        } catch (error) {
+          console.error('Error loading dashboard:', error);
+        }
+      }
+
+      loadDashboard();
+    });
+  </script>
+</body>
+</html>

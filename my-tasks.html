@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مهامي - نظام إدارة المشاريع</title>
+  <link rel="icon" type="image/png" href="assets/images/1.png">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="assets/images/1.png" alt="Logo" class="logo-main" onerror="this.src='https://via.placeholder.com/80?text=Logo'">
+        <div style="text-align: center; font-weight: 700; font-size: 18px;">نظام إدارة المشاريع</div>
+      </div>
+      <nav class="sidebar-nav">
+        <li><a href="dashboard.html"><i class="fas fa-chart-line"></i> <span>لوحة التحكم</span></a></li>
+        <li><a href="projects.html"><i class="fas fa-folder"></i> <span>المشاريع</span></a></li>
+        <li><a href="my-tasks.html" class="active"><i class="fas fa-tasks"></i> <span>مهامي</span></a></li>
+        <li><a href="calendar.html"><i class="fas fa-calendar-alt"></i> <span>التقويم</span></a></li>
+        <li id="analyticsLink" style="display: none;"><a href="team-analytics.html"><i class="fas fa-microscope"></i> <span>تحليلات الفريق</span></a></li>
+      </nav>
+    </aside>
+
+    <div class="main-content">
+      <nav class="navbar animate-fade">
+        <div class="navbar-brand">
+          <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+          <span>قائمة مهامي الخاصة</span>
+        </div>
+        <div class="navbar-right">
+          <div class="user-info">
+            <div class="user-avatar" id="userAvatar">ع</div>
+            <div class="user-details">
+              <div id="userName" style="font-weight: 700;">المستخدم</div>
+              <div id="userRole" style="font-size: 12px; color: var(--text-muted);">مستخدم</div>
+            </div>
+          </div>
+          <!-- <button class="btn btn-danger btn-sm" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>خروج</span></button> -->
+        </div>
+      </nav>
+
+      <div class="content page-fade-in">
+
+        <!-- شريط الفلتر -->
+        <div class="filter-bar animate-fade" id="filterBar">
+          <span class="filter-bar-label"><i class="fas fa-filter" style="margin-left:4px;"></i> تصفية:</span>
+          <button class="filter-btn active" data-filter="all" onclick="applyFilter(this, 'all')">
+            الكل <span class="filter-count" id="count-all">0</span>
+          </button>
+          <button class="filter-btn" data-filter="done" onclick="applyFilter(this, 'done')">
+            <i class="fas fa-check-circle" style="color:#10b981;"></i> مكتملة <span class="filter-count" id="count-done">0</span>
+          </button>
+          <button class="filter-btn" data-filter="in_progress" onclick="applyFilter(this, 'in_progress')">
+            <i class="fas fa-spinner" style="color:#f59e0b;"></i> قيد التنفيذ <span class="filter-count" id="count-in_progress">0</span>
+          </button>
+          <button class="filter-btn" data-filter="todo" onclick="applyFilter(this, 'todo')">
+            <i class="fas fa-clock" style="color:#06b6d4;"></i> قيد الانتظار <span class="filter-count" id="count-todo">0</span>
+          </button>
+          <button class="filter-btn" data-filter="overdue" onclick="applyFilter(this, 'overdue')">
+            <i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i> متأخرة <span class="filter-count" id="count-overdue">0</span>
+          </button>
+        </div>
+
+        <!-- شبكة المهام -->
+        <div id="tasksGrid" class="grid grid-3 animate-fade">
+          <div class="loading-shimmer">
+            <div class="shimmer-card"><div class="shimmer-line full"></div><div class="shimmer-line medium"></div><div class="shimmer-line short"></div></div>
+            <div class="shimmer-card"><div class="shimmer-line full"></div><div class="shimmer-line medium"></div><div class="shimmer-line short"></div></div>
+            <div class="shimmer-card"><div class="shimmer-line full"></div><div class="shimmer-line medium"></div><div class="shimmer-line short"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="footer">
+        جميع الحقوق محفوظة &copy; <span class="footer-name">Mohamed Sayed Zaky</span> - 2026
+      </footer>
+    </div>
+  </div>
+
+  <!-- نافذة تفاصيل المهمة -->
+  <div class="modal-overlay" id="taskDetailModal">
+    <div class="modal modal-animated modal-wide">
+      <div class="modal-header">
+        <h3 id="detailTitle" style="color:var(--primary);"></h3>
+        <button class="btn btn-secondary btn-sm" onclick="closeDetailModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="task-detail-grid">
+          <div class="task-detail-item"><span class="task-detail-label">الحالة</span><span id="detailStatus"></span></div>
+          <div class="task-detail-item"><span class="task-detail-label">الأولوية</span><span id="detailPriority"></span></div>
+          <div class="task-detail-item"><span class="task-detail-label">المشروع</span><span class="task-detail-value" id="detailProject"></span></div>
+          <div class="task-detail-item"><span class="task-detail-label">نسبة الإنجاز</span><span class="task-detail-value" id="detailProgress"></span></div>
+          <div class="task-detail-item"><span class="task-detail-label">تاريخ البداية</span><span class="task-detail-value" id="detailStart"></span></div>
+          <div class="task-detail-item"><span class="task-detail-label">تاريخ الاستحقاق</span><span class="task-detail-value" id="detailDue"></span></div>
+        </div>
+        <div id="detailDescWrap" style="display:none;">
+          <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:6px;">الوصف</div>
+          <div class="task-detail-desc" id="detailDesc"></div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">
+          <i class="fas fa-comments" style="color:var(--primary);margin-left:6px;"></i> التعليقات
+        </div>
+        <div class="comments-thread" id="detailComments">
+          <div style="text-align:center;color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeDetailModal()">إغلاق</button>
+        <button class="btn btn-primary" id="detailUpdateBtn"><i class="fas fa-cog"></i> تحديث الحالة</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة تحديث المهمة -->
+  <div class="modal-overlay" id="updateTaskModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTaskTitle">تحديث المهمة</h3>
+        <button class="btn btn-danger btn-sm" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>حالة المهمة</label>
+          <select id="taskStatus" class="form-control">
+            <option value="todo">قيد الانتظار</option>
+            <option value="in_progress">قيد التنفيذ</option>
+            <option value="done">مكتملة</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>نسبة الإنجاز (<span id="progressVal">0</span>%)</label>
+          <input type="range" id="taskProgress" class="form-control" min="0" max="100" step="5" oninput="document.getElementById('progressVal').textContent = this.value">
+        </div>
+        <div class="form-group">
+          <label>إضافة تعليق</label>
+          <textarea id="taskComment" class="form-control" rows="2" placeholder="اكتب ملاحظاتك هنا..."></textarea>
+        </div>
+        <div id="commentsList" style="margin-top: 20px; max-height: 150px; overflow-y: auto; border-top: 1px solid var(--border); padding-top: 10px;">
+          <!-- التعليقات تظهر هنا -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" onclick="closeModal()">إلغاء</button>
+        <button class="btn btn-primary" id="saveUpdateBtn">حفظ التغييرات</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="scripts/supabase-client.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!window.userManager.isLoggedIn()) window.location.href = 'login.html';
+      const currentUser = window.userManager.getCurrentUser();
+      let currentTaskId = null;
+      let allTasks = [];
+      let currentFilter = 'all';
+
+      document.getElementById('userName').textContent = currentUser.full_name;
+      document.getElementById('userRole').textContent = window.userManager.getRoleLabel(currentUser.role);
+      document.getElementById('userAvatar').textContent = currentUser.full_name.charAt(0);
+      
+      if (window.userManager.isManager()) document.getElementById('analyticsLink').style.display = 'block';
+
+      // Mobile Menu Toggle
+      const menuToggle = document.getElementById('menuToggle');
+      const sidebar = document.getElementById('sidebar');
+      menuToggle.onclick = () => sidebar.classList.toggle('active');
+
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.onclick = () => {
+          if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+            userManager.logout();
+            window.location.href = 'login.html';
+          }
+        };
+      }
+
+      // وظيفة لتحديد لون الحالة
+      function getStatusBadgeClass(status) {
+        const statusClasses = {
+          'todo': 'badge-info',
+          'in_progress': 'badge-warning',
+          'done': 'badge-success',
+          'delayed': 'badge-danger'
+        };
+        return statusClasses[status] || 'badge-info';
+      }
+
+      // فلترة وعرض المهام
+      window.applyFilter = function(btn, filter) {
+        currentFilter = filter;
+        // إعادة ضبط الأزرار
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          b.className = 'filter-btn';
+        });
+        // تفعيل الزر المحدد
+        const activeMap = {
+          'all': 'active',
+          'done': 'active-success',
+          'in_progress': 'active-warning',
+          'todo': 'active-info',
+          'overdue': 'active-danger'
+        };
+        btn.classList.add(activeMap[filter] || 'active');
+        renderTasks(allTasks);
+      };
+
+      function isOverdue(task) {
+        return task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done';
+      }
+
+      function filterTasks(tasks) {
+        if (currentFilter === 'all') return tasks;
+        if (currentFilter === 'overdue') return tasks.filter(t => isOverdue(t));
+        return tasks.filter(t => t.status === currentFilter);
+      }
+
+      function updateCounts(tasks) {
+        document.getElementById('count-all').textContent = tasks.length;
+        document.getElementById('count-done').textContent = tasks.filter(t => t.status === 'done').length;
+        document.getElementById('count-in_progress').textContent = tasks.filter(t => t.status === 'in_progress').length;
+        document.getElementById('count-todo').textContent = tasks.filter(t => t.status === 'todo').length;
+        document.getElementById('count-overdue').textContent = tasks.filter(t => isOverdue(t)).length;
+      }
+
+      function renderTasks(tasks) {
+        const grid = document.getElementById('tasksGrid');
+        const filtered = filterTasks(tasks);
+
+        if (filtered.length === 0) {
+          grid.innerHTML = `
+            <div class="tasks-empty">
+              <i class="fas fa-inbox"></i>
+              <p>لا توجد مهام في هذه الفئة</p>
+            </div>`;
+          return;
+        }
+
+        grid.innerHTML = filtered.map(t => {
+          const statusClass = getStatusBadgeClass(t.status);
+          const statusLabel = window.getStatusLabel(t.status);
+          const overdue = isOverdue(t);
+          const priorityClass = t.priority === 'high' ? 'priority-high' : t.priority === 'medium' ? 'priority-medium' : 'priority-low';
+          const statusCardClass = t.status === 'done' ? 'status-done' : overdue ? 'status-overdue' : '';
+          const progressClass = t.status === 'done' ? 'done' : '';
+          const dueDateClass = overdue ? 'overdue' : '';
+
+          const priorityBadgeClass = t.priority === 'high' ? 'badge-danger' : t.priority === 'medium' ? 'badge-warning' : 'badge-info';
+          const priorityLabel = window.getPriorityLabel(t.priority);
+
+          const descHtml = t.description
+            ? `<div class="task-card-desc">${t.description}</div>`
+            : '';
+
+          const startDateHtml = t.start_date
+            ? `<div class="task-card-date-item">
+                <span class="task-card-date-label">📅 البداية</span>
+                <span class="task-card-date-value">${window.formatDate(t.start_date)}</span>
+               </div>`
+            : `<div class="task-card-date-item">
+                <span class="task-card-date-label">📅 البداية</span>
+                <span class="task-card-date-value" style="color:var(--text-muted);">—</span>
+               </div>`;
+
+          return `
+            <div class="task-card animate-slide ${priorityClass} ${statusCardClass}" id="task-card-${t.id}">
+              <div class="task-card-header">
+                <div class="task-card-badges">
+                  <span class="badge ${statusClass}">${statusLabel}</span>
+                  <span class="badge ${priorityBadgeClass}">${priorityLabel}</span>
+                  ${overdue ? '<span class="badge badge-danger">⚠️ متأخرة</span>' : ''}
+                </div>
+                ${t._commentCount > 0 ? `<span class="comment-count-chip"><i class="fas fa-comments"></i> ${t._commentCount}</span>` : ''}
+              </div>
+
+              <h3 class="task-card-title">${t.title}</h3>
+              <div class="task-card-project"><i class="fas fa-folder"></i> ${t.projects?.name || 'مشروع'}</div>
+
+              ${descHtml}
+
+              <div class="task-card-dates">
+                ${startDateHtml}
+                <div class="task-card-date-item">
+                  <span class="task-card-date-label">⏰ الاستحقاق</span>
+                  <span class="task-card-date-value ${dueDateClass}">${window.formatDate(t.due_date)}</span>
+                </div>
+              </div>
+
+              <div class="task-progress-wrap">
+                <div class="task-progress-header">
+                  <span>نسبة الإنجاز</span>
+                  <span>${t.progress}%</span>
+                </div>
+                <div class="task-progress-bar-bg">
+                  <div class="task-progress-bar-fill ${progressClass}" style="width: ${t.progress}%"></div>
+                </div>
+              </div>
+
+              <div class="task-card-actions">
+                <button class="btn btn-secondary" style="flex:1;justify-content:center;font-size:13px;" onclick="openTaskDetail(${t.id})">
+                  <i class="fas fa-expand-alt"></i> عرض التفاصيل
+                </button>
+                <button class="btn btn-primary" onclick="openUpdateModal(${t.id}, '${t.title.replace(/'/g, "\\'")}', '${t.status}', ${t.progress})">
+                  <i class="fas fa-cog"></i> تحديث
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // تبديل عرض التعليقات
+      window.toggleComments = async function(taskId, btn) {
+        const section = document.getElementById('comments-section-' + taskId);
+        if (section.classList.contains('open')) {
+          section.classList.remove('open');
+          btn.innerHTML = '<i class="fas fa-comments"></i> عرض التعليقات';
+          return;
+        }
+        section.classList.add('open');
+        btn.innerHTML = '<i class="fas fa-chevron-up"></i> إخفاء التعليقات';
+
+        // تحميل التعليقات
+        try {
+          const comments = await window.commentManager.getComments(taskId);
+          if (comments.length === 0) {
+            section.innerHTML = '<div class="no-comments-msg">لا توجد تعليقات بعد</div>';
+          } else {
+            section.innerHTML = comments.map(c => `
+              <div class="comment-item">
+                <div class="comment-item-author">${c.users?.full_name || 'مستخدم'}</div>
+                <div class="comment-item-content">${c.content}</div>
+                <div class="comment-item-date">${new Date(c.created_at).toLocaleString('ar-EG')}</div>
+              </div>
+            `).join('');
+          }
+        } catch(e) {
+          section.innerHTML = '<div class="no-comments-msg" style="color:var(--danger);">تعذّر تحميل التعليقات</div>';
+        }
+      };
+
+      async function loadMyTasks() {
+        try {
+          const tasks = await window.taskManager.getMyTasks(currentUser.id);
+          // جلب عدد التعليقات لكل مهمة بشكل متوازٍ
+          await Promise.all(tasks.map(async t => {
+            try {
+              const c = await window.commentManager.getComments(t.id);
+              t._commentCount = c.length;
+              t._comments = c;
+            } catch { t._commentCount = 0; t._comments = []; }
+          }));
+          allTasks = tasks;
+          updateCounts(tasks);
+          renderTasks(tasks);
+        } catch (error) {
+          console.error('Error loading tasks:', error);
+          document.getElementById('tasksGrid').innerHTML = `
+            <div class="tasks-empty">
+              <i class="fas fa-exclamation-circle" style="color:var(--danger);"></i>
+              <p>حدث خطأ أثناء تحميل المهام</p>
+            </div>`;
+        }
+      }
+
+      // ===== TASK DETAIL MODAL =====
+      const detailModal = document.getElementById('taskDetailModal');
+      window.closeDetailModal = () => {
+        detailModal.querySelector('.modal-animated').classList.remove('modal-show');
+        setTimeout(() => detailModal.style.display = 'none', 250);
+      };
+      window.openTaskDetail = (taskId) => {
+        const t = allTasks.find(x => x.id === taskId);
+        if (!t) return;
+        document.getElementById('detailTitle').textContent = t.title;
+        document.getElementById('detailStatus').innerHTML = `<span class="badge ${getStatusBadgeClass(t.status)}">${window.getStatusLabel(t.status)}</span>`;
+        document.getElementById('detailPriority').innerHTML = `<span class="badge ${t.priority==='high'?'badge-danger':t.priority==='medium'?'badge-warning':'badge-info'}">${window.getPriorityLabel(t.priority)}</span>`;
+        document.getElementById('detailProject').textContent = t.projects?.name || '---';
+        document.getElementById('detailProgress').textContent = t.progress + '%';
+        document.getElementById('detailStart').textContent = window.formatDate(t.start_date);
+        document.getElementById('detailDue').textContent = window.formatDate(t.due_date);
+        const descWrap = document.getElementById('detailDescWrap');
+        if (t.description) { descWrap.style.display = 'block'; document.getElementById('detailDesc').textContent = t.description; }
+        else { descWrap.style.display = 'none'; }
+        // comments
+        const thread = document.getElementById('detailComments');
+        const comments = t._comments || [];
+        thread.innerHTML = comments.length === 0
+          ? '<div style="text-align:center;color:var(--text-muted);font-size:13px;">لا توجد تعليقات</div>'
+          : comments.map(c => `<div class="comment-thread-item"><div class="comment-avatar">${(c.users?.full_name||'?').charAt(0)}</div><div class="comment-bubble"><div class="comment-bubble-author">${c.users?.full_name||'مستخدم'}</div><div class="comment-bubble-text">${c.content}</div><div class="comment-bubble-date">${new Date(c.created_at).toLocaleString('ar-EG')}</div></div></div>`).join('');
+        document.getElementById('detailUpdateBtn').onclick = () => { closeDetailModal(); openUpdateModal(t.id, t.title, t.status, t.progress); };
+        detailModal.style.display = 'flex';
+        requestAnimationFrame(() => detailModal.querySelector('.modal-animated').classList.add('modal-show'));
+      };
+
+      const modal = document.getElementById('updateTaskModal');
+      window.closeModal = () => modal.style.display = 'none';
+
+      window.openUpdateModal = async (id, title, status, progress) => {
+        currentTaskId = id;
+        document.getElementById('modalTaskTitle').textContent = title;
+        document.getElementById('taskStatus').value = status;
+        document.getElementById('taskProgress').value = progress;
+        document.getElementById('progressVal').textContent = progress;
+        document.getElementById('taskComment').value = '';
+        
+        modal.style.display = 'flex';
+        
+        // تحميل التعليقات
+        const comments = await window.commentManager.getComments(id);
+        const list = document.getElementById('commentsList');
+        list.innerHTML = comments.map(c => `
+          <div style="font-size: 12px; margin-bottom: 8px; padding: 5px; background: #f8f9fa; border-radius: 5px;">
+            <strong>${c.users?.full_name}:</strong> ${c.content}
+            <div style="font-size: 10px; color: var(--text-muted);">${new Date(c.created_at).toLocaleString('ar-EG')}</div>
+          </div>
+        `).join('') || '<div style="font-size: 12px; color: var(--text-muted);">لا توجد تعليقات</div>';
+      };
+
+      document.getElementById('saveUpdateBtn').onclick = async () => {
+        const status = document.getElementById('taskStatus').value;
+        const progress = document.getElementById('taskProgress').value;
+        const comment = document.getElementById('taskComment').value;
+
+        try {
+          await window.taskManager.updateTask(currentTaskId, { status, progress }, currentUser.id);
+          if (comment.trim()) {
+            await window.commentManager.addComment(currentTaskId, currentUser.id, comment);
+          }
+          window.closeModal();
+          loadMyTasks();
+        } catch (e) { alert('حدث خطأ أثناء التحديث'); }
+      };
+
+      loadMyTasks();
+    });
+  </script>
+</body>
+</html>
